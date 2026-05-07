@@ -937,6 +937,15 @@ function togDone(id,e){
 function delTask(id,e){
   e.stopPropagation();
   if(!confirm('이 업무를 삭제하시겠습니까?')) return;
+  // 구글 시트에서도 삭제
+  if(gsUrl){
+    fetch(gsUrl, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', id:id})
+    }).catch(err=>console.warn('delete sync err',err));
+  }
   tasks=tasks.filter(t=>t.id!==id);
   save(); render();
   showToast('🗑 삭제되었습니다','#f75f5f');
@@ -1042,6 +1051,14 @@ function saveEdit(){
 
 function deleteFromEdit(){
   if(!confirm('이 업무를 삭제하시겠습니까?')) return;
+  if(gsUrl){
+    fetch(gsUrl, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'delete', id:currentEditId})
+    }).catch(err=>console.warn('delete sync err',err));
+  }
   tasks = tasks.filter(t=>t.id!==currentEditId);
   save(); render(); closeD();
   showToast('🗑 삭제되었습니다','#f75f5f');
@@ -1197,21 +1214,42 @@ function loadFromSheet(){
         showToast('구글 시트에 데이터가 없습니다','#f59e0b');
         return;
       }
-      const rows = data[0][0]==='날짜' ? data.slice(1) : data;
-      const loaded = rows.map((row,i)=>({
-        id:        Date.now()+i,
-        date:      String(row[0]||'').trim(),
-        loc:       String(row[1]||'').trim(),
-        title:     String(row[2]||'').trim(),
-        cat:       String(row[3]||'기타').trim(),
-        pri:       row[4]==='긴급'?'high':row[4]==='보통'?'mid':'low',
-        mat:       String(row[5]||'').trim(),
-        detail:    String(row[6]||'').trim(),
-        feel:      String(row[7]||'').trim(),
-        done:      String(row[8]||'').trim()==='완료',
-        createdAt: String(row[9]||new Date().toISOString()).trim(),
-        synced:    true,
-      })).filter(t=>t.title);
+      // 헤더 확인: id가 첫컬럼이면 새 형식, 날짜가 첫컬럼이면 구 형식
+      const hasId = data[0][0]==='id';
+      const rows = data.slice(1);
+      const loaded = rows.map((row,i)=>{
+        if(hasId){
+          return {
+            id:        Number(row[0])||Date.now()+i,
+            date:      String(row[1]||'').trim(),
+            loc:       String(row[2]||'').trim(),
+            title:     String(row[3]||'').trim(),
+            cat:       String(row[4]||'기타').trim(),
+            pri:       row[5]==='긴급'?'high':row[5]==='보통'?'mid':'low',
+            mat:       String(row[6]||'').trim(),
+            detail:    String(row[7]||'').trim(),
+            feel:      String(row[8]||'').trim(),
+            done:      String(row[9]||'').trim()==='완료',
+            createdAt: String(row[10]||new Date().toISOString()).trim(),
+            synced:    true,
+          };
+        } else {
+          return {
+            id:        Date.now()+i,
+            date:      String(row[0]||'').trim(),
+            loc:       String(row[1]||'').trim(),
+            title:     String(row[2]||'').trim(),
+            cat:       String(row[3]||'기타').trim(),
+            pri:       row[4]==='긴급'?'high':row[4]==='보통'?'mid':'low',
+            mat:       String(row[5]||'').trim(),
+            detail:    String(row[6]||'').trim(),
+            feel:      String(row[7]||'').trim(),
+            done:      String(row[8]||'').trim()==='완료',
+            createdAt: String(row[9]||new Date().toISOString()).trim(),
+            synced:    true,
+          };
+        }
+      }).filter(t=>t.title);
       tasks = loaded;
       save();
       render();
