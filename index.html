@@ -162,6 +162,22 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 .empty{text-align:center;padding:60px 20px;color:#94a3b8;}
 
+/* ── EDIT MODE ── */
+.d-edit-inp,.d-edit-txa,.d-edit-sel{width:100%;border:1.5px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;background:#f8fafc;outline:none;color:#1a1e2e;transition:border-color .15s;}
+.d-edit-inp:focus,.d-edit-txa:focus,.d-edit-sel:focus{border-color:#5ba3f5;background:#fff;box-shadow:0 0 0 3px rgba(91,163,245,.1);}
+.d-edit-txa{resize:vertical;min-height:60px;}
+.d-edit-label{font-size:10px;font-weight:700;color:#94a3b8;letter-spacing:.8px;text-transform:uppercase;margin:10px 0 4px;}
+.d-edit-label:first-child{margin-top:0;}
+.btn-save-edit{width:100%;background:#1e2d4a;border:none;color:#fff;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px;transition:background .15s;}
+.btn-save-edit:hover{background:#2a3f6a;}
+.btn-del-edit{width:100%;background:#fff;border:1.5px solid #fca5a5;color:#b91c1c;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s;}
+.btn-del-edit:hover{background:#fff1f1;}
+.edit-pri-row{display:flex;gap:6px;margin-top:2px;}
+.edit-cat-sel{width:100%;border:1.5px solid #e2e8f0;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;background:#f8fafc;outline:none;color:#1a1e2e;}
+.d-mode-tabs{display:flex;gap:0;margin-bottom:16px;border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;}
+.d-mode-tab{flex:1;padding:8px;border:none;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
+.d-mode-tab.act{background:#1e2d4a;color:#fff;}
+
 /* PRINT */
 @media print{
   body{overflow:visible;height:auto;background:#fff;font-size:11px;}
@@ -360,23 +376,67 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 <!-- DETAIL PANEL -->
 <div class="detail" id="dpanel">
   <button class="detail-close" onclick="closeD()">✕ 닫기</button>
-  <div class="d-title" id="d-title"></div>
-  <div class="d-row"><div class="d-key">날짜</div><div class="d-val" id="d-date"></div></div>
-  <div class="d-row"><div class="d-key">분야</div><div class="d-val" id="d-cat"></div></div>
-  <div class="d-row"><div class="d-key">위치</div><div class="d-val" id="d-loc"></div></div>
-  <div class="d-row"><div class="d-key">우선순위</div><div class="d-val" id="d-pri"></div></div>
-  <div class="d-row"><div class="d-key">상태</div><div class="d-val" id="d-done-v"></div></div>
-  <div class="d-box" id="d-mat-box">
-    <div class="d-box-t">🔧 사용 자재</div>
-    <div id="d-mat"></div>
+
+  <!-- 탭 -->
+  <div class="d-mode-tabs" style="margin-top:10px;">
+    <button class="d-mode-tab act" id="tab-view" onclick="switchTab('view')">👁 보기</button>
+    <button class="d-mode-tab" id="tab-edit" onclick="switchTab('edit')">✏️ 수정</button>
   </div>
-  <div class="d-box">
-    <div class="d-box-t">📝 세부 내용</div>
-    <div id="d-detail"></div>
+
+  <!-- 보기 모드 -->
+  <div id="view-mode">
+    <div class="d-title" id="d-title"></div>
+    <div class="d-row"><div class="d-key">날짜</div><div class="d-val" id="d-date"></div></div>
+    <div class="d-row"><div class="d-key">분야</div><div class="d-val" id="d-cat"></div></div>
+    <div class="d-row"><div class="d-key">위치</div><div class="d-val" id="d-loc"></div></div>
+    <div class="d-row"><div class="d-key">우선순위</div><div class="d-val" id="d-pri"></div></div>
+    <div class="d-row"><div class="d-key">상태</div><div class="d-val" id="d-done-v"></div></div>
+    <div class="d-box" id="d-mat-box">
+      <div class="d-box-t">🔧 사용 자재</div>
+      <div id="d-mat"></div>
+    </div>
+    <div class="d-box">
+      <div class="d-box-t">📝 세부 내용</div>
+      <div id="d-detail"></div>
+    </div>
+    <div class="d-note">
+      <div class="d-note-t">💭 느낀점</div>
+      <div id="d-feel"></div>
+    </div>
   </div>
-  <div class="d-note">
-    <div class="d-note-t">💭 느낀점</div>
-    <div id="d-feel"></div>
+
+  <!-- 수정 모드 -->
+  <div id="edit-mode" style="display:none;">
+    <div class="d-edit-label">📅 날짜</div>
+    <input class="d-edit-inp" id="e-date" type="date"/>
+
+    <div class="d-edit-label">🏷️ 업무 분야</div>
+    <select class="edit-cat-sel" id="e-cat"></select>
+
+    <div class="d-edit-label">📍 작업 위치</div>
+    <input class="d-edit-inp" id="e-loc" placeholder="작업 위치"/>
+
+    <div class="d-edit-label">업무 내용</div>
+    <input class="d-edit-inp" id="e-title" placeholder="업무 내용"/>
+
+    <div class="d-edit-label">우선순위</div>
+    <div class="edit-pri-row">
+      <button class="pri-btn p-low" data-p="low" onclick="setEditPri(this)">🟢 낮음</button>
+      <button class="pri-btn" data-p="mid" onclick="setEditPri(this)">🟠 보통</button>
+      <button class="pri-btn" data-p="high" onclick="setEditPri(this)">🔴 긴급</button>
+    </div>
+
+    <div class="d-edit-label">🔧 사용 자재</div>
+    <input class="d-edit-inp" id="e-mat" placeholder="사용 자재"/>
+
+    <div class="d-edit-label">📝 세부 내용</div>
+    <textarea class="d-edit-txa" id="e-detail" placeholder="세부 내용"></textarea>
+
+    <div class="d-edit-label">💭 느낀점</div>
+    <textarea class="d-edit-txa" id="e-feel" placeholder="느낀점"></textarea>
+
+    <button class="btn-save-edit" onclick="saveEdit()">💾 수정 저장</button>
+    <button class="btn-del-edit" onclick="deleteFromEdit()">🗑 이 업무 삭제</button>
   </div>
 </div>
 
@@ -731,7 +791,18 @@ function delTask(id,e){
 /* ══════════════════════════════════════
    세부정보 패널
 ══════════════════════════════════════ */
+let currentEditId = null;
+let currentEditPri = 'low';
+
 function openD(t){
+  currentEditId = t.id;
+  switchTab('view');
+  fillViewMode(t);
+  fillEditMode(t);
+  document.getElementById('dpanel').classList.add('open');
+}
+
+function fillViewMode(t){
   const cat=CATS.find(c=>c.n===t.cat)||{i:'📌',n:t.cat,c:'#334',b:'#f0f2f8'};
   const pl={low:'🟢 낮음',mid:'🟠 보통',high:'🔴 긴급'};
   let dateStr=t.date||'—';
@@ -748,8 +819,80 @@ function openD(t){
   document.getElementById('d-detail').textContent  = t.detail||'내용 없음';
   document.getElementById('d-feel').textContent    = t.feel||'없음';
   document.getElementById('d-mat-box').style.display = t.mat?'block':'none';
-  document.getElementById('dpanel').classList.add('open');
 }
+
+function fillEditMode(t){
+  // 분야 셀렉트 채우기 (처음 한 번만)
+  const sel = document.getElementById('e-cat');
+  if(sel.options.length === 0){
+    CAT_GROUPS.forEach(g=>{
+      const og = document.createElement('optgroup');
+      og.label = g.g;
+      g.items.forEach(c=>{
+        const op = document.createElement('option');
+        op.value = c.n;
+        op.textContent = c.i+' '+c.n;
+        og.appendChild(op);
+      });
+      sel.appendChild(og);
+    });
+  }
+  document.getElementById('e-date').value  = t.date||'';
+  sel.value                                = t.cat||'';
+  document.getElementById('e-loc').value   = t.loc||'';
+  document.getElementById('e-title').value = t.title||'';
+  document.getElementById('e-mat').value   = t.mat||'';
+  document.getElementById('e-detail').value= t.detail||'';
+  document.getElementById('e-feel').value  = t.feel||'';
+  // 우선순위 버튼
+  currentEditPri = t.pri||'low';
+  document.querySelectorAll('.edit-pri-row .pri-btn').forEach(b=>{
+    b.className='pri-btn';
+    if(b.dataset.p===currentEditPri) b.classList.add('p-'+currentEditPri);
+  });
+}
+
+function switchTab(mode){
+  document.getElementById('view-mode').style.display = mode==='view'?'block':'none';
+  document.getElementById('edit-mode').style.display = mode==='edit'?'block':'none';
+  document.getElementById('tab-view').classList.toggle('act', mode==='view');
+  document.getElementById('tab-edit').classList.toggle('act', mode==='edit');
+}
+
+function setEditPri(el){
+  document.querySelectorAll('.edit-pri-row .pri-btn').forEach(b=>b.className='pri-btn');
+  el.classList.add('p-'+el.dataset.p);
+  currentEditPri = el.dataset.p;
+}
+
+function saveEdit(){
+  const t = tasks.find(t=>t.id===currentEditId);
+  if(!t) return;
+  t.date   = document.getElementById('e-date').value;
+  t.cat    = document.getElementById('e-cat').value;
+  t.loc    = document.getElementById('e-loc').value.trim();
+  t.title  = document.getElementById('e-title').value.trim();
+  t.pri    = currentEditPri;
+  t.mat    = document.getElementById('e-mat').value.trim();
+  t.detail = document.getElementById('e-detail').value.trim();
+  t.feel   = document.getElementById('e-feel').value.trim();
+  t.synced = false;
+  if(!t.title){ showToast('❌ 업무 내용을 입력하세요','#f75f5f'); return; }
+  save();
+  render();
+  fillViewMode(t);
+  switchTab('view');
+  showToast('✅ 수정 완료!','#2ecc87');
+  if(gsUrl) syncOne(t);
+}
+
+function deleteFromEdit(){
+  if(!confirm('이 업무를 삭제하시겠습니까?')) return;
+  tasks = tasks.filter(t=>t.id!==currentEditId);
+  save(); render(); closeD();
+  showToast('🗑 삭제되었습니다','#f75f5f');
+}
+
 function closeD(){ document.getElementById('dpanel').classList.remove('open'); }
 
 /* ══════════════════════════════════════
