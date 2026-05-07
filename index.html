@@ -178,6 +178,115 @@ tbody td{padding:10px 12px;vertical-align:middle;}
 .d-mode-tab{flex:1;padding:8px;border:none;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#64748b;transition:all .15s;}
 .d-mode-tab.act{background:#1e2d4a;color:#fff;}
 
+/* ── MOBILE ── */
+@media (max-width: 768px){
+  body{overflow:auto;}
+  .hdr{padding:0 12px;height:48px;}
+  .hdr-title{font-size:13px;}
+  .hdr-sub{display:none;}
+  .hdr-right{gap:6px;}
+  .btn-gs{font-size:10px;padding:5px 8px;}
+  #btn-load{font-size:10px;padding:5px 8px;}
+  .gs-status{display:none;}
+
+  /* 레이아웃 — 세로 전환 */
+  .layout{flex-direction:column;height:auto;}
+  .sidebar{width:100%;min-width:unset;border-right:none;border-bottom:1.5px solid #e2e8f0;display:none;}
+  .sidebar.mob-show{display:flex;}
+  .main{height:auto;}
+
+  /* 통계 */
+  .stats{padding:8px 10px;gap:6px;}
+  .stat{padding:5px 8px;}
+  .stat-n{font-size:17px;}
+  .stat-l{font-size:9px;}
+
+  /* 필터 */
+  .toolbar{padding:6px 10px;gap:5px;}
+  .fgroup-btn{padding:5px 9px;font-size:10px;}
+  .srch{width:100px;font-size:10px;}
+  .btn-copy{font-size:10px;padding:5px 8px;}
+  .btn-print{display:none;}
+
+  /* 테이블 → 카드 */
+  .tbl-wrap{padding:8px 10px;}
+  table thead{display:none;}
+  table tbody tr{
+    display:block;
+    background:#fff;
+    border-radius:10px;
+    border:1.5px solid #e2e8f0;
+    margin-bottom:10px;
+    padding:12px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  table tbody tr.done-row{opacity:.5;}
+  table tbody td{
+    display:block;
+    padding:2px 0;
+    border:none;
+  }
+  /* 날짜 td */
+  table tbody td:nth-child(1){
+    font-size:11px;color:#94a3b8;margin-bottom:4px;
+  }
+  /* 완료 토글 td */
+  table tbody td:nth-child(2){
+    position:absolute;top:12px;right:12px;
+  }
+  /* 위치 td */
+  table tbody td:nth-child(3){
+    font-size:11px;color:#5ba3f5;font-weight:600;
+  }
+  /* 업무내용 td */
+  table tbody td:nth-child(4){
+    font-size:14px;font-weight:700;color:#1a1e2e;margin:4px 0;
+  }
+  /* 분야 td */
+  table tbody td:nth-child(5){font-size:11px;}
+  /* 완료여부 td */
+  table tbody td:nth-child(6){display:inline-block;margin-right:6px;}
+  /* 자재 td */
+  table tbody td:nth-child(7){display:inline-block;}
+  /* 삭제 td */
+  table tbody td:nth-child(8){display:none;}
+
+  table tbody tr{position:relative;}
+
+  /* 하단 탭 */
+  .mob-tab-bar{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    background:#fff;border-top:1.5px solid #e2e8f0;
+    z-index:90;height:56px;
+  }
+  .mob-tab{
+    flex:1;border:none;background:transparent;
+    font-size:10px;font-weight:700;color:#94a3b8;
+    cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px;
+    font-family:inherit;transition:color .15s;
+  }
+  .mob-tab .tab-icon{font-size:20px;}
+  .mob-tab.act{color:#1e2d4a;}
+  .mob-tab.act .tab-icon{filter:none;}
+
+  /* 입력폼 모바일 */
+  .sb-top{padding:12px 12px 0;}
+  .inp,.txa{font-size:14px;padding:10px 12px;}
+  .btn-submit{margin:10px 12px 70px;padding:14px;font-size:14px;}
+  .chip{font-size:13px;padding:9px 12px;}
+  .pri-btn{padding:10px 4px;font-size:12px;}
+
+  /* 세부정보 패널 */
+  .detail{width:100%;top:auto;bottom:0;height:85vh;border-radius:16px 16px 0 0;border-left:none;border-top:1.5px solid #e2e8f0;}
+
+  /* 바닥 여백 */
+  .tbl-wrap{padding-bottom:70px;}
+
+  .fgroup-panel{position:fixed;bottom:60px;left:10px;right:10px;top:auto;}
+}
+
 /* PRINT */
 @media print{
   body{overflow:visible;height:auto;background:#fff;font-size:11px;}
@@ -462,6 +571,19 @@ tbody td{padding:10px 12px;vertical-align:middle;}
   </div>
 </div>
 
+<!-- 모바일 하단 탭바 -->
+<div class="mob-tab-bar" id="mob-tab-bar" style="display:none;">
+  <button class="mob-tab act" id="mob-tab-list" onclick="mobTab('list')">
+    <span class="tab-icon">📋</span>목록
+  </button>
+  <button class="mob-tab" id="mob-tab-input" onclick="mobTab('input')">
+    <span class="tab-icon">✏️</span>입력
+  </button>
+  <button class="mob-tab" id="mob-tab-sync" onclick="loadFromSheet()">
+    <span class="tab-icon">⬇️</span>불러오기
+  </button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -531,6 +653,37 @@ function init(){
     if(!e.target.closest('.fgroup'))      closeAllFG();
     if(!e.target.closest('#cat-btn') && !e.target.closest('#cat-drop')) closeCatDrop();
   });
+
+  // 모바일 감지
+  if(window.innerWidth <= 768){
+    document.getElementById('mob-tab-bar').style.display = 'flex';
+    mobTab('list');
+  }
+  window.addEventListener('resize', ()=>{
+    const isMob = window.innerWidth <= 768;
+    document.getElementById('mob-tab-bar').style.display = isMob ? 'flex' : 'none';
+    if(!isMob){
+      document.querySelector('.sidebar').classList.remove('mob-show');
+      document.querySelector('.sidebar').style.display = '';
+    }
+  });
+}
+
+function mobTab(tab){
+  const sidebar = document.querySelector('.sidebar');
+  const listTab  = document.getElementById('mob-tab-list');
+  const inputTab = document.getElementById('mob-tab-input');
+  if(tab === 'list'){
+    sidebar.classList.remove('mob-show');
+    listTab.classList.add('act');
+    inputTab.classList.remove('act');
+  } else {
+    sidebar.classList.add('mob-show');
+    inputTab.classList.add('act');
+    listTab.classList.remove('act');
+    document.getElementById('i-title').focus();
+  }
+  document.getElementById('mob-tab-sync').classList.remove('act');
 }
 
 /* ── 분야 사이드바 ── */
