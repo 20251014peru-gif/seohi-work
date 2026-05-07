@@ -1024,81 +1024,72 @@ function syncBatch(list){
   setTimeout(()=>syncBatch(rest), 300);
 }
 
-/* ── 구글 시트에서 불러오기 ── */
+/* ── 구글 시트에서 불러오기 (JSONP 방식) ── */
 function loadFromSheet(){
   if(!gsUrl){ showToast('❌ 먼저 Google Sheets 연동을 하세요','#f75f5f'); return; }
   const btn = document.getElementById('btn-load');
   btn.textContent = '⏳ 불러오는 중...';
   btn.disabled = true;
 
-  // JSONP 방식으로 데이터 요청
   const callbackName = 'gsCallback_'+Date.now();
   const script = document.createElement('script');
   script.src = gsUrl + '?callback=' + callbackName;
 
+  let done = false;
+
   window[callbackName] = function(data){
+    done = true;
     try{
-      if(!Array.isArray(data) || data.length === 0){
+      if(!Array.isArray(data) || data.length < 2){
         showToast('구글 시트에 데이터가 없습니다','#f59e0b');
         return;
       }
-      // 헤더 제외하고 데이터 변환
-      const loaded = data.slice(1).map((row,i)=>({
+      const rows = data[0][0]==='날짜' ? data.slice(1) : data;
+      const loaded = rows.map((row,i)=>({
         id:        Date.now()+i,
-        date:      row[0]||'',
-        loc:       row[1]||'',
-        title:     row[2]||'',
-        cat:       row[3]||'기타',
+        date:      String(row[0]||'').trim(),
+        loc:       String(row[1]||'').trim(),
+        title:     String(row[2]||'').trim(),
+        cat:       String(row[3]||'기타').trim(),
         pri:       row[4]==='긴급'?'high':row[4]==='보통'?'mid':'low',
-        mat:       row[5]||'',
-        detail:    row[6]||'',
-        feel:      row[7]||'',
-        done:      row[8]==='완료',
-        createdAt: row[9]||new Date().toISOString(),
+        mat:       String(row[5]||'').trim(),
+        detail:    String(row[6]||'').trim(),
+        feel:      String(row[7]||'').trim(),
+        done:      String(row[8]||'').trim()==='완료',
+        createdAt: String(row[9]||new Date().toISOString()).trim(),
         synced:    true,
       })).filter(t=>t.title);
       tasks = loaded;
       save();
       render();
       showToast('✅ '+loaded.length+'건 불러오기 완료!','#2ecc87');
-    } catch(e){
-      showToast('❌ 불러오기 실패: '+e.message,'#f75f5f');
+    } catch(err){
+      showToast('❌ 오류: '+err.message,'#f75f5f');
     } finally {
       btn.textContent = '⬇️ 시트에서 불러오기';
       btn.disabled = false;
-      delete window[callbackName];
-      document.head.removeChild(script);
+      try{ delete window[callbackName]; document.head.removeChild(script); }catch(e){}
     }
   };
 
-  script.onerror = ()=>{
-    // JSONP 실패시 fetch로 재시도
-    fetch(gsUrl + '?action=getAll')
-      .then(r=>r.json())
-      .then(data=>{
-        if(!Array.isArray(data)){ showToast('❌ 데이터 형식 오류','#f75f5f'); return; }
-        const loaded = data.slice(1).map((row,i)=>({
-          id:        Date.now()+i,
-          date:      row[0]||'',
-          loc:       row[1]||'',
-          title:     row[2]||'',
-          cat:       row[3]||'기타',
-          pri:       row[4]==='긴급'?'high':row[4]==='보통'?'mid':'low',
-          mat:       row[5]||'',
-          detail:    row[6]||'',
-          feel:      row[7]||'',
-          done:      row[8]==='완료',
-          createdAt: row[9]||new Date().toISOString(),
-          synced:    true,
-        })).filter(t=>t.title);
-        tasks = loaded;
-        save();
-        render();
-        showToast('✅ '+loaded.length+'건 불러오기 완료!','#2ecc87');
-      })
-      .catch(()=>showToast('❌ 불러오기 실패. Apps Script를 확인하세요','#f75f5f'))
-      .finally(()=>{ btn.textContent='⬇️ 시트에서 불러오기'; btn.disabled=false; });
+  script.onerror = function(){
+    if(!done){
+      btn.textContent = '⬇️ 시트에서 불러오기';
+      btn.disabled = false;
+      showToast('❌ 불러오기 실패. Apps Script 새 배포를 확인하세요','#f75f5f');
+      try{ delete window[callbackName]; document.head.removeChild(script); }catch(e){}
+    }
   };
+
+  // 10초 타임아웃
+  setTimeout(()=>{
+    if(!done){
+      btn.textContent = '⬇️ 시트에서 불러오기';
+      btn.disabled = false;
+      showToast('❌ 시간 초과. 네트워크를 확인하세요','#f75f5f');
+      try{ delete window[callbackName]; document.head.removeChild(script); }catch(e){}
+    }
+  }, 10000);
 
   document.head.appendChild(script);
 }
