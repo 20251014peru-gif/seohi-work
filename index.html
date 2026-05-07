@@ -1167,27 +1167,46 @@ function saveGsUrl(){
 
 /* 단일 항목 동기화 */
 function syncOne(t){
-  fetch(gsUrl, {
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      id:        t.id,
-      date:      t.date,
-      loc:       t.loc,
-      title:     t.title,
-      cat:       t.cat,
-      pri:       t.pri==='high'?'긴급':t.pri==='mid'?'보통':'낮음',
-      mat:       t.mat,
-      detail:    t.detail,
-      feel:      t.feel,
-      done:      t.done?'완료':'미완료',
-      createdAt: t.createdAt,
-    })
-  }).then(()=>{
-    const found=tasks.find(x=>x.id===t.id);
+  // JSONP 방식으로 POST — no-cors 우회
+  const payload = {
+    id:        t.id,
+    date:      t.date,
+    loc:       t.loc,
+    title:     t.title,
+    cat:       t.cat,
+    pri:       t.pri==='high'?'긴급':t.pri==='mid'?'보통':'낮음',
+    mat:       t.mat,
+    detail:    t.detail,
+    feel:      t.feel,
+    done:      t.done?'완료':'미완료',
+    createdAt: t.createdAt,
+  };
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = gsUrl;
+  form.target = 'gs_iframe_'+t.id;
+  form.style.display = 'none';
+
+  const inp = document.createElement('input');
+  inp.type = 'hidden';
+  inp.name = 'payload';
+  inp.value = JSON.stringify(payload);
+  form.appendChild(inp);
+
+  // iframe으로 전송 (CORS 우회)
+  const iframe = document.createElement('iframe');
+  iframe.name = 'gs_iframe_'+t.id;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(()=>{
+    try{ document.body.removeChild(form); document.body.removeChild(iframe); }catch(e){}
+    const found = tasks.find(x=>x.id===t.id);
     if(found){ found.synced=true; save(); render(); }
-  }).catch(err=>{ console.warn('sync err',err); });
+  }, 2000);
 }
 
 /* 배치 동기화 */
