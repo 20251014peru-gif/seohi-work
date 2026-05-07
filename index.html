@@ -786,8 +786,12 @@ function addTask(){
   if(!title){  showToast('❌ 업무 내용을 입력하세요','#f75f5f'); return; }
   if(!selCat){ showToast('❌ 업무 분야를 선택하세요','#f75f5f'); return; }
 
+  // 순차 id 생성
+  const maxId = tasks.length > 0 ? Math.max(...tasks.map(t=>Number(t.id)||0)) : 0;
+  const newId = maxId + 1;
+
   const t = {
-    id:        Date.now(),
+    id:        newId,
     date:      document.getElementById('i-date').value,
     cat:       selCat,
     loc:       document.getElementById('i-loc').value.trim(),
