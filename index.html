@@ -58,6 +58,8 @@ body{font-family:'Noto Sans KR','Malgun Gothic',sans-serif;background:#f4f6f9;fo
 .pri-row{display:flex;gap:6px;}
 .pri-btn{flex:1;padding:7px 4px;border-radius:7px;border:1.5px solid #e2e8f0;background:#f8fafc;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:#94a3b8;transition:all .15s;}
 .pri-btn.p-low{background:#f0fdf6;border-color:#2ecc87;color:#1a7a4f;}
+.pri-btn.p-done{background:#f0fdf6;border-color:#2ecc87;color:#065f46;}
+.pri-btn.p-pend{background:#fff7ed;border-color:#f59e0b;color:#92400e;}
 .pri-btn.p-mid{background:#fff7ed;border-color:#f59e0b;color:#92400e;}
 .pri-btn.p-high{background:#fff1f1;border-color:#f75f5f;color:#b91c1c;}
 
@@ -385,6 +387,15 @@ tbody td{padding:10px 12px;vertical-align:middle;}
         <div class="lbl">느낀점</div>
         <textarea class="txa" id="i-feel" placeholder="작업 후 느낀점, 개선사항..." style="min-height:50px;"></textarea>
       </div>
+
+      <!-- ⑨ 완료 여부 -->
+      <div class="form-row">
+        <div class="lbl">완료 여부</div>
+        <div class="pri-row">
+          <button class="pri-btn p-done" id="done-btn-y" data-done="true" onclick="setDoneInput(this)">✅ 완료</button>
+          <button class="pri-btn" id="done-btn-n" data-done="false" onclick="setDoneInput(this)">⏳ 미완료</button>
+        </div>
+      </div>
     </div>
 
     <button class="btn-submit" id="btn-submit" onclick="addTask()">✅ 업무 등록 후 초기화</button>
@@ -636,6 +647,7 @@ let tasks   = JSON.parse(localStorage.getItem('seohi_v3_tasks') || '[]');
 let gsUrl   = localStorage.getItem('seohi_v3_gsUrl') || '';
 let selCat  = null;
 let selPri  = 'low';
+let selDone = false;
 let flt     = {date:'all', cat:'all', done:'all'};
 
 /* ══════════════════════════════════════
@@ -681,7 +693,9 @@ function mobTab(tab){
     sidebar.classList.add('mob-show');
     inputTab.classList.add('act');
     listTab.classList.remove('act');
-    document.getElementById('i-title').focus();
+    selDone = false;
+  document.querySelectorAll('[data-done]').forEach(b=>b.className='pri-btn');
+  document.getElementById('i-title').focus();
   }
   document.getElementById('mob-tab-sync').classList.remove('act');
 }
@@ -772,6 +786,12 @@ function refreshChips(){
 /* ══════════════════════════════════════
    우선순위
 ══════════════════════════════════════ */
+function setDoneInput(el){
+  document.querySelectorAll('[data-done]').forEach(b=>{ b.className='pri-btn'; });
+  selDone = el.dataset.done === 'true';
+  el.classList.add(selDone ? 'p-done' : 'p-pend');
+}
+
 function setPri(el){
   document.querySelectorAll('.pri-btn').forEach(b=>b.className='pri-btn');
   el.classList.add('p-'+el.dataset.p);
@@ -800,7 +820,7 @@ function addTask(){
     mat:       document.getElementById('i-mat').value.trim(),
     detail:    document.getElementById('i-detail').value.trim(),
     feel:      document.getElementById('i-feel').value.trim(),
-    done:      false,
+    done:      selDone,
     createdAt: new Date().toISOString(),
     synced:    false,
   };
@@ -821,6 +841,8 @@ function clearForm(){
   refreshChips();
   document.querySelectorAll('.pri-btn').forEach(b=>b.className='pri-btn');
   document.querySelector('[data-p="low"]').classList.add('p-low');
+  selDone = false;
+  document.querySelectorAll('[data-done]').forEach(b=>b.className='pri-btn');
   document.getElementById('i-title').focus();
 }
 
