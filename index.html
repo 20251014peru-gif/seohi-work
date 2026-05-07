@@ -647,7 +647,7 @@ let tasks   = JSON.parse(localStorage.getItem('seohi_v3_tasks') || '[]');
 let gsUrl   = localStorage.getItem('seohi_v3_gsUrl') || '';
 let selCat  = null;
 let selPri  = 'low';
-let selDone = false;
+let selDone = true;
 let flt     = {date:'all', cat:'all', done:'all'};
 
 /* ══════════════════════════════════════
@@ -658,6 +658,7 @@ function init(){
   buildCatFilter();
   setGsStatus();
   document.getElementById('i-date').value = today();
+  document.getElementById('done-btn-y').classList.add('p-done');
   document.getElementById('gs-code-preview').textContent = getAppsScriptCode();
   render();
 
@@ -693,8 +694,9 @@ function mobTab(tab){
     sidebar.classList.add('mob-show');
     inputTab.classList.add('act');
     listTab.classList.remove('act');
-    selDone = false;
+    selDone = true;
   document.querySelectorAll('[data-done]').forEach(b=>b.className='pri-btn');
+  document.getElementById('done-btn-y').classList.add('p-done');
   document.getElementById('i-title').focus();
   }
   document.getElementById('mob-tab-sync').classList.remove('act');
@@ -837,12 +839,14 @@ function addTask(){
 function clearForm(){
   ['i-loc','i-title','i-mat','i-detail','i-feel'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('i-date').value = today();
+  document.getElementById('done-btn-y').classList.add('p-done');
   selCat=null; selPri='low';
   refreshChips();
   document.querySelectorAll('.pri-btn').forEach(b=>b.className='pri-btn');
   document.querySelector('[data-p="low"]').classList.add('p-low');
-  selDone = false;
+  selDone = true;
   document.querySelectorAll('[data-done]').forEach(b=>b.className='pri-btn');
+  document.getElementById('done-btn-y').classList.add('p-done');
   document.getElementById('i-title').focus();
 }
 
